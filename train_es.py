@@ -25,13 +25,13 @@ if __name__ == "__main__":
     dev_data = utils.HeadData(config.dev_id_docs, np.arange(len(config.dev_id_docs)))
     test_data = utils.HeadData(config.test_id_docs, np.arange(len(config.test_id_docs)))
 
-    tf.reset_default_graph()
-    tf.set_random_seed(1)
+    tf.compat.v1.reset_default_graph()
+    tf.random.set_seed(1)
 
     utils.printParameters(config)
 
-    with tf.Session() as sess:
-        embedding_matrix = tf.get_variable('embedding_matrix', shape=config.wordvectors.shape, dtype=tf.float32,
+    with  tf.compat.v1.Session() as sess:
+        embedding_matrix = tf.compat.v1.get_variable('embedding_matrix', shape=config.wordvectors.shape, dtype=tf.float32,
                                            trainable=False).assign(config.wordvectors)
         emb_mtx = sess.run(embedding_matrix)
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         operations=tf_utils.operations(train_step,obj, m_op, predicted_op_ner, actual_op_ner, predicted_op_rel, actual_op_rel, score_op_rel)
 
 
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         best_score=0
         nepoch_no_imprv = 0  # for early stopping

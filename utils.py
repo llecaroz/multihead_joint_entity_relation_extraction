@@ -180,8 +180,8 @@ def readWordvectorsNumpy(wordvectorfile, isBinary=False):
 
     vectorsize = model.vector_size
 
-    for key in list(model.vocab.keys()):
-        wordvectors.append(model.wv[key])
+    for key in list(model.index_to_key):
+        wordvectors.append(model[key])
         words.append(key)
 
     zeroVec = [0 for i in range(vectorsize)]
@@ -210,7 +210,7 @@ def readIndices(wordvectorfile, isBinary=False):
 
     count = 0
     # c=0
-    for key in list(model.vocab.keys()):
+    for key in list(model.index_to_key):
         indices[key] = curIndex
         curIndex += 1
 

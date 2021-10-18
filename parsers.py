@@ -65,7 +65,7 @@ def readHeadFile(headFile):
     # head_id_col_vector = ['tId', 'emId', "token", "nerId", "nerBilou","nerBIO", "ner", 'relLabels', "headIds", 'rels', 'relIds','scoringMatrixHeads','tokenWeights']
     head_id_col_vector = ['token_id', 'token', "BIO", "relation", 'head']
     headfile = pd.read_csv(headFile, names=head_id_col_vector, encoding="utf-8",
-                           engine='python', sep="\t", quoting=csv.QUOTE_NONE).as_matrix()
+                           engine='python', sep="\t", quoting=csv.QUOTE_NONE).to_numpy()
 
     return headIdParser(headfile).head_docs
 

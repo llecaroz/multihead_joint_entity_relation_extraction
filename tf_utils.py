@@ -90,14 +90,14 @@ class model:
 
         if self.config.optimizer == 'Adam':
 
-            optim = tf.train.AdamOptimizer(self.config.learning_rate)
+            optim = tf.compat.v1.train.AdamOptimizer(self.config.learning_rate)
 
         elif self.config.optimizer == 'Adagrad':
-            optim = tf.train.AdagradOptimizer(self.config.learning_rate)
+            optim = tf.compat.v1.train.AdagradOptimizer(self.config.learning_rate)
         elif self.config.optimizer == 'AdadeltaOptimizer':
-            optim = tf.train.AdadeltaOptimizer(self.config.learning_rate)
+            optim = tf.compat.v1.train.AdadeltaOptimizer(self.config.learning_rate)
         elif self.config.optimizer == 'GradientDescentOptimizer':
-            optim = tf.train.GradientDescentOptimizer(self.config.learning_rate)
+            optim = tf.compat.v1.train.GradientDescentOptimizer(self.config.learning_rate)
 
         if self.config.gradientClipping == True:
 
@@ -149,21 +149,21 @@ class model:
         import tensorflow as tf
 
 
-        u_a = tf.get_variable("u_typ", [self.config.hidden_size_lstm * 2, self.config.hidden_size_n1])  # [128 32]
-        v = tf.get_variable("v_typ", [self.config.hidden_size_n1, n_types])  # [32,1] or [32,10]
-        b_s = tf.get_variable("b_typ", [self.config.hidden_size_n1])
-        b_c = tf.get_variable("b_ctyp", [n_types])
+        u_a = tf.compat.v1.get_variable("u_typ", [self.config.hidden_size_lstm * 2, self.config.hidden_size_n1])  # [128 32]
+        v = tf.compat.v1.get_variable("v_typ", [self.config.hidden_size_n1, n_types])  # [32,1] or [32,10]
+        b_s = tf.compat.v1.get_variable("b_typ", [self.config.hidden_size_n1])
+        b_c = tf.compat.v1.get_variable("b_ctyp", [n_types])
 
         mul = tf.einsum('aij,jk->aik', lstm_out, u_a)  # [16 348 64] * #[64 32] = [16 348 32]
 
         sum = mul + b_s
         if self.config.activation=="tanh":
-            output = tf.nn.tanh(sum)
+            output = tf.compat.v1.nn.tanh(sum)
         elif self.config.activation=="relu":
-            output = tf.nn.relu(sum)
+            output = tf.compat.v1.nn.relu(sum)
 
         if self.config.use_dropout==True:
-            output = tf.nn.dropout(output, keep_prob=dropout_keep_in_prob)
+            output = tf.compat.v1.nn.dropout(output, keep_prob=dropout_keep_in_prob)
 
         g = tf.einsum('aik,kp->aip', output, v) + b_c
 
@@ -173,10 +173,10 @@ class model:
     def getHeadSelectionScores(self, lstm_out,dropout_keep_in_prob=1):
         import tensorflow as tf
 
-        u_a = tf.get_variable("u_a", [(self.config.hidden_size_lstm * 2) + self.config.label_embeddings_size, self.config.hidden_size_n1])  # [128 32]
-        w_a = tf.get_variable("w_a", [(self.config.hidden_size_lstm * 2) + self.config.label_embeddings_size, self.config.hidden_size_n1])  # [128 32]
-        v = tf.get_variable("v", [self.config.hidden_size_n1, len(self.config.dataset_set_relations)])  # [32,1] or [32,4]
-        b_s = tf.get_variable("b_s", [self.config.hidden_size_n1])
+        u_a = tf.compat.v1.get_variable("u_a", [(self.config.hidden_size_lstm * 2) + self.config.label_embeddings_size, self.config.hidden_size_n1])  # [128 32]
+        w_a = tf.compat.v1.get_variable("w_a", [(self.config.hidden_size_lstm * 2) + self.config.label_embeddings_size, self.config.hidden_size_n1])  # [128 32]
+        v = tf.compat.v1.get_variable("v", [self.config.hidden_size_n1, len(self.config.dataset_set_relations)])  # [32,1] or [32,4]
+        b_s = tf.compat.v1.get_variable("b_s", [self.config.hidden_size_n1])
 
 
 
@@ -193,14 +193,14 @@ class model:
         if self.config.activation=="tanh":
             output = tf.tanh(outer_sum_bias)
         elif self.config.activation=="relu":
-            output = tf.nn.relu(outer_sum_bias)
+            output = tf.compat.v1.nn.relu(outer_sum_bias)
 
 
         if self.config.use_dropout==True:
-            output = tf.nn.dropout(output, keep_prob=dropout_keep_in_prob)
+            output = tf.compat.v1.nn.dropout(output, keep_prob=dropout_keep_in_prob)
 
 
-        output = tf.nn.dropout(output, keep_prob=dropout_keep_in_prob)
+        output = tf.compat.v1.nn.dropout(output, keep_prob=dropout_keep_in_prob)
 
 
 
@@ -220,22 +220,23 @@ class model:
                     seqlen,dropout_fcl_ner_keep,ners_ids, dropout_fcl_rel_keep,is_train,scoring_matrix_gold, reuse = False):
 
         import tensorflow as tf
+        import tensorflow_addons
 
-        with tf.variable_scope("loss_computation", reuse=reuse):
+        with tf.compat.v1.variable_scope("loss_computation", reuse=reuse):
 
             if self.config.use_dropout:
-                    input_rnn = tf.nn.dropout(input_rnn, keep_prob=dropout_embedding_keep)
+                    input_rnn = tf.compat.v1.nn.dropout(input_rnn, keep_prob=dropout_embedding_keep)
                     #input_rnn = tf.Print(input_rnn, [dropout_embedding_keep], 'embedding:  ', summarize=1000)
             for i in range(self.config.num_lstm_layers):
                 if self.config.use_dropout and i>0:
-                    input_rnn = tf.nn.dropout(input_rnn, keep_prob=dropout_lstm_keep)
+                    input_rnn = tf.compat.v1.nn.dropout(input_rnn, keep_prob=dropout_lstm_keep)
                     #input_rnn = tf.Print(input_rnn, [dropout_lstm_keep], 'lstm:  ', summarize=1000)
 
-                lstm_fw_cell = tf.contrib.rnn.BasicLSTMCell(self.config.hidden_size_lstm)
+                lstm_fw_cell = tf.compat.v1.nn.rnn_cell.BasicLSTMCell(self.config.hidden_size_lstm)
                 # Backward direction cell
-                lstm_bw_cell = tf.contrib.rnn.BasicLSTMCell(self.config.hidden_size_lstm)
+                lstm_bw_cell = tf.compat.v1.nn.rnn_cell.BasicLSTMCell(self.config.hidden_size_lstm)
 
-                lstm_out, _ = tf.nn.bidirectional_dynamic_rnn(
+                lstm_out, _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(
                     cell_fw=lstm_fw_cell,
                     cell_bw=lstm_bw_cell,
                     inputs=input_rnn,
@@ -247,7 +248,7 @@ class model:
                 lstm_output = input_rnn
 
             if self.config.use_dropout:
-                lstm_output = tf.nn.dropout(lstm_output, keep_prob=dropout_lstm_output_keep)
+                lstm_output = tf.compat.v1.nn.dropout(lstm_output, keep_prob=dropout_lstm_output_keep)
 
 
             mask = tf.sequence_mask(seqlen, dtype=tf.float32)
@@ -258,29 +259,29 @@ class model:
 
                 nerScores = self.getNerScores(ner_input, len(self.config.dataset_set_ec_tags),
                                               dropout_keep_in_prob=dropout_fcl_ner_keep)
-                label_matrix = tf.get_variable(name="label_embeddings", dtype=tf.float32,
+                label_matrix = tf.compat.v1.get_variable(name="label_embeddings", dtype=tf.float32,
                                                shape=[len(self.config.dataset_set_ec_tags),
                                                       self.config.label_embeddings_size])
             elif self.config.ner_classes == "BIO":
 
                 nerScores = self.getNerScores(ner_input, len(self.config.dataset_set_bio_tags),
                                               dropout_keep_in_prob=dropout_fcl_ner_keep)
-                label_matrix = tf.get_variable(name="label_embeddings", dtype=tf.float32,
+                label_matrix = tf.compat.v1.get_variable(name="label_embeddings", dtype=tf.float32,
                                                shape=[len(self.config.dataset_set_bio_tags),
                                                       self.config.label_embeddings_size])
 
             # nerScores = tf.Print(nerScores, [tf.shape(ners_ids), ners_ids, tf.shape(nerScores)], 'ners_ids:  ', summarize=1000)
 
-            log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(
+            log_likelihood, transition_params = tensorflow_addons.text.crf.crf_log_likelihood(
                 nerScores, ners_ids, seqlen)
             if self.config.ner_loss == "crf":
 
                 lossNER = -log_likelihood
-                predNers, viterbi_score = tf.contrib.crf.crf_decode(
+                predNers, viterbi_score = tensorflow_addons.text.crf.crf_decode(
                     nerScores, transition_params, seqlen)
 
             elif self.config.ner_loss == "softmax":
-                lossNER = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=nerScores, labels=ners_ids)
+                lossNER = tf.compat.v1.nn.sparse_softmax_cross_entropy_with_logits(logits=nerScores, labels=ners_ids)
 
                 predNers = tf.cast(tf.arg_max(nerScores, 2), tf.int32)
 
@@ -290,7 +291,7 @@ class model:
                 labels = tf.cond(is_train > 0, lambda: ners_ids, lambda: predNers)
 
 
-                label_embeddings = tf.nn.embedding_lookup(label_matrix, labels)
+                label_embeddings = tf.compat.v1.nn.embedding_lookup(label_matrix, labels)
                 rel_input = tf.concat([lstm_output, label_embeddings], axis=2)
 
             else:
@@ -302,8 +303,8 @@ class model:
                                                      dropout_keep_in_prob=dropout_fcl_rel_keep)
 
 
-            lossREL = tf.nn.sigmoid_cross_entropy_with_logits(logits=rel_scores, labels=scoring_matrix_gold)
-            probas=tf.nn.sigmoid(rel_scores)
+            lossREL = tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(logits=rel_scores, labels=scoring_matrix_gold)
+            probas=tf.compat.v1.nn.sigmoid(rel_scores)
             predictedRel = tf.round(probas)
 
             return lossNER,lossREL,predNers,predictedRel,rel_scores
@@ -316,38 +317,38 @@ class model:
         import tensorflow as tf
 
         # shape = (batch size, max length of sentence, max length of word)
-        char_ids = tf.placeholder(tf.int32, shape=[None, None, None])
-        is_train = tf.placeholder(tf.int32)
+        char_ids = tf.compat.v1.placeholder(tf.int32, shape=[None, None, None])
+        is_train = tf.compat.v1.placeholder(tf.int32)
 
         # shape = (batch_size, max_length of sentence)
-        word_lengths = tf.placeholder(tf.int32, shape=[None, None])
+        word_lengths = tf.compat.v1.placeholder(tf.int32, shape=[None, None])
 
-        embedding_ids = tf.placeholder(tf.int32, [None, None])  # [ batch_size  *   max_sequence ]
+        embedding_ids = tf.compat.v1.placeholder(tf.int32, [None, None])  # [ batch_size  *   max_sequence ]
 
-        token_ids = tf.placeholder(tf.int32, [None, None])  # [ batch_size  *   max_sequence ]
+        token_ids = tf.compat.v1.placeholder(tf.int32, [None, None])  # [ batch_size  *   max_sequence ]
 
-        entity_tags_ids = tf.placeholder(tf.int32, [None, None])
+        entity_tags_ids = tf.compat.v1.placeholder(tf.int32, [None, None])
 
-        scoring_matrix_gold = tf.placeholder(tf.float32, [None, None, None])  # [ batch_size  *   max_sequence]
+        scoring_matrix_gold = tf.compat.v1.placeholder(tf.float32, [None, None, None])  # [ batch_size  *   max_sequence]
 
 
-        tokens = tf.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
-        BIO = tf.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
-        entity_tags = tf.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
+        tokens = tf.compat.v1.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
+        BIO = tf.compat.v1.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
+        entity_tags = tf.compat.v1.placeholder(tf.string, [None, None])  # [ batch_size  *   max_sequence]
 
         # classes = ...
-        seqlen = tf.placeholder(tf.int32, [None])  # [ batch_size ]
+        seqlen = tf.compat.v1.placeholder(tf.int32, [None])  # [ batch_size ]
 
-        doc_ids = tf.placeholder(tf.string, [None])  # [ batch_size ]
+        doc_ids = tf.compat.v1.placeholder(tf.string, [None])  # [ batch_size ]
 
 
-        dropout_embedding_keep = tf.placeholder(tf.float32, name="dropout_embedding_keep")
-        dropout_lstm_keep = tf.placeholder(tf.float32, name="dropout_lstm_keep")
-        dropout_lstm_output_keep = tf.placeholder(tf.float32, name="dropout_lstm_output_keep")
-        dropout_fcl_ner_keep = tf.placeholder(tf.float32, name="dropout_fcl_ner_keep")
-        dropout_fcl_rel_keep = tf.placeholder(tf.float32, name="dropout_fcl_rel_keep")
+        dropout_embedding_keep = tf.compat.v1.placeholder(tf.float32, name="dropout_embedding_keep")
+        dropout_lstm_keep = tf.compat.v1.placeholder(tf.float32, name="dropout_lstm_keep")
+        dropout_lstm_output_keep = tf.compat.v1.placeholder(tf.float32, name="dropout_lstm_output_keep")
+        dropout_fcl_ner_keep = tf.compat.v1.placeholder(tf.float32, name="dropout_fcl_ner_keep")
+        dropout_fcl_rel_keep = tf.compat.v1.placeholder(tf.float32, name="dropout_fcl_rel_keep")
 
-        embedding_matrix = tf.get_variable(name="embeddings", shape=self.emb_mtx.shape,
+        embedding_matrix = tf.compat.v1.get_variable(name="embeddings", shape=self.emb_mtx.shape,
                                            initializer=tf.constant_initializer(self.emb_mtx), trainable=False)
 
 
@@ -355,10 +356,10 @@ class model:
 
         # 1. get character embeddings
 
-        K = tf.get_variable(name="char_embeddings", dtype=tf.float32,
+        K = tf.compat.v1.get_variable(name="char_embeddings", dtype=tf.float32,
                             shape=[len(self.config.dataset_set_characters), self.config.char_embeddings_size])
         # shape = (batch, sentence, word, dim of char embeddings)
-        char_embeddings = tf.nn.embedding_lookup(K, char_ids)
+        char_embeddings = tf.compat.v1.nn.embedding_lookup(K, char_ids)
 
         # 2. put the time dimension on axis=1 for dynamic_rnn
         s = tf.shape(char_embeddings)  # store old shape
@@ -372,10 +373,10 @@ class model:
         char_hidden_size = self.config.hidden_size_char
 
         # 3. bi lstm on chars
-        cell_fw = tf.contrib.rnn.BasicLSTMCell(char_hidden_size, state_is_tuple=True)
-        cell_bw = tf.contrib.rnn.BasicLSTMCell(char_hidden_size, state_is_tuple=True)
+        cell_fw = tf.compat.v1.nn.rnn_cell.BasicLSTMCell(char_hidden_size, state_is_tuple=True)
+        cell_bw = tf.compat.v1.nn.rnn_cell.BasicLSTMCell(char_hidden_size, state_is_tuple=True)
 
-        _, ((_, output_fw), (_, output_bw)) = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell_fw, cell_bw=cell_bw,
+        _, ((_, output_fw), (_, output_bw)) = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=cell_fw, cell_bw=cell_bw,
                                                                               inputs=char_embeddings_reshaped,
                                                                               sequence_length=word_lengths_reshaped,
                                                                               dtype=tf.float32)
@@ -387,7 +388,7 @@ class model:
 
         # concat char embeddings
 
-        word_embeddings = tf.nn.embedding_lookup(embedding_matrix, embedding_ids)
+        word_embeddings = tf.compat.v1.nn.embedding_lookup(embedding_matrix, embedding_ids)
 
         if self.config.use_chars == True:
             input_rnn = tf.concat([word_embeddings, char_rep], axis=-1)
@@ -410,7 +411,7 @@ class model:
         obj = tf.reduce_sum(lossNER) + tf.reduce_sum(lossREL)
         #perturb the inputs
         raw_perturb = tf.gradients(obj, embeddings_input)[0]  # [batch, L, dim]
-        normalized_per=tf.nn.l2_normalize(raw_perturb, axis=[1, 2])
+        normalized_per=tf.compat.v1.nn.l2_normalize(raw_perturb, axis=[1, 2])
         perturb =self.config.alpha*tf.sqrt(tf.cast(tf.shape(input_rnn)[2], tf.float32)) * tf.stop_gradient(normalized_per)
         perturb_inputs = embeddings_input + perturb
 
